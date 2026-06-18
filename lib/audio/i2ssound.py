@@ -44,10 +44,10 @@ _INT_MINVAL = const(-32768)
 _INT_MAXVAL = const(32767)
 
 _MH_I2S_ID = const(1)
-_MH_I2S_SCK = const(11)
-_MH_I2S_WS = const(13)
-_MH_I2S_SD = const(12)
-_MH_I2S_MCK = const(6)
+_MH_I2S_SCK = const(8)
+_MH_I2S_WS = const(9)
+_MH_I2S_SD = const(11)
+_MH_I2S_MCK = const(7)
 
 
 @micropython.viper

@@ -13,14 +13,14 @@ from .i2ssound import I2SSound
 
 
 _MH_I2S_ID = const(1)
-_MH_I2S_MCK = const(6)
-_MH_I2S_SCK = const(11)
-_MH_I2S_WS = const(13)
-_MH_I2S_SD = const(12)
+_MH_I2S_MCK = const(7)
+_MH_I2S_SCK = const(8)
+_MH_I2S_WS = const(9)
+_MH_I2S_SD = const(11)
 _MH_I2S_MIC = const(10)
 
-_ES8311_SDA = const(5)
-_ES8311_SCL = const(4)
+_ES8311_SDA = const(12)
+_ES8311_SCL = const(13)
 _ES8311_ADDR = const(0x18)
 
 _WAV_BUF_SIZE = const(4096)
