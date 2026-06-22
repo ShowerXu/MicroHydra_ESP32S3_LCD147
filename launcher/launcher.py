@@ -161,40 +161,21 @@ PREV_SELECTOR_INDEX = 0
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Finding Apps ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def scan_apps():
-    """Scan for apps in /apps and /sd/apps."""
+    """Scan for apps in /apps."""
     global APP_NAMES, APP_PATHS  # noqa: PLW0603
 
-    # first we need a list of apps located on the flash or SDCard
-    SD.mount()
+    # We do NOT mount SD card here anymore, because we want fast boot/reset.
+    # Default apps are all stored in internal flash /apps directory.
+    # So we only list internal flash directory.
     main_directory = os.listdir("/")
-
-    sd_directory = []
-    if "sd" in main_directory:
-        sd_directory = os.listdir("/sd")
 
     # if the apps folder does not exist, create it.
     if "apps" not in main_directory:
         os.mkdir("/apps")
         main_directory = os.listdir("/")
 
-    # do the same for the sdcard apps directory
-    if "apps" not in sd_directory and "sd" in main_directory:
-        os.mkdir("/sd/apps")
-        sd_directory = os.listdir("/sd")
-
-    # if everything above worked, sdcard should be mounted (if available),
-    # and both app directories should exist. now look inside to find our apps:
+    # and only scan the internal /apps directory:
     main_app_list = list(os.ilistdir("/apps"))
-    sd_app_list = []
-
-    if "sd" in main_directory:
-        try:
-            sd_app_list = list(os.ilistdir("/sd/apps"))
-        except OSError as e:
-            print(e)
-            print(
-                "SDCard mounted but cant be opened; assuming it's been removed. Unmounting /sd.")
-            os.umount('/sd')
 
     # now lets collect some separate app names and locations
     app_names = []
@@ -202,15 +183,6 @@ def scan_apps():
 
     for entry in main_app_list:
         this_name, this_path = get_app_paths(entry, "/apps/")
-        if this_name:
-            this_name = this_name.replace('.cli', '')
-            if this_name not in app_names:
-                app_names.append(this_name)
-
-            app_paths[this_name] = this_path
-
-    for entry in sd_app_list:
-        this_name, this_path = get_app_paths(entry, "/sd/apps/")
         if this_name:
             this_name = this_name.replace('.cli', '')
             if this_name not in app_names:

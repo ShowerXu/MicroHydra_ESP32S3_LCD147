@@ -118,26 +118,53 @@ def connect_wifi():
     TERM.print(I18N["Connected!"])
 
 
+class HTTPError(Exception):
+    pass
+
+
 def request_file(file_path: str) -> requests.Response:
     """Get the specific app file from GitHub."""
     TERM.print('Making request...')
+    url = f'https://raw.githubusercontent.com/echo-lalia/MicroHydra-Apps/main/catalog-output/{file_path}'
     response = requests.get(  # noqa: S113 # no point using a timeout here
-        f'https://raw.githubusercontent.com/echo-lalia/MicroHydra-Apps/main/catalog-output/{file_path}',
+        url,
         headers={
             "accept": "application/vnd.github.v3.raw",
             "User-Agent": f"{Device.name} - MicroHydra",
             },
         )
     TERM.print(f"Returned code: {response.status_code}")
+    if response.status_code == 404:
+        if file_path == f"{Device.name.lower()}.json":
+            TERM.print("Custom board catalog not found, trying fallback...")
+            response.close()
+            fallback_file = "tdeck.json"
+            url = f'https://raw.githubusercontent.com/echo-lalia/MicroHydra-Apps/main/catalog-output/{fallback_file}'
+            response = requests.get(
+                url,
+                headers={
+                    "accept": "application/vnd.github.v3.raw",
+                    "User-Agent": f"{Device.name} - MicroHydra",
+                    },
+                )
+            TERM.print(f"Fallback returned code: {response.status_code}")
+            if response.status_code == 404:
+                response.close()
+                raise HTTPError("404 Not Found")
+        else:
+            response.close()
+            raise HTTPError("404 Not Found")
     return response
 
 
 def try_request_file(file_path: str) -> requests.Response:
-    """Capture errors and keep trying to get requested file."""
+    """Capture errors and keep trying to get requested file, but raise HTTPError on 404."""
     wait = 1  # time to wait between attempts (don't get rate limited)
     while True:
         try:
             return request_file(file_path)
+        except HTTPError as e:
+            raise e
         except (OSError, ValueError) as e:  # noqa: PERF203
             TERM.print(f"Request failed: {e}")
             time.sleep(wait)
@@ -149,11 +176,15 @@ def fetch_app_catalog() -> dict:
 
     TERM.print(I18N["Getting app catalog..."])
 
-    response = try_request_file(f"{Device.name.lower()}.json")
-
-    result = json.loads(response.content)
-    response.close()
-    return result
+    try:
+        response = try_request_file(f"{Device.name.lower()}.json")
+        result = json.loads(response.content)
+        response.close()
+        return result
+    except HTTPError:
+        TERM.print(I18N["Failed to get catalog."] + " (404)")
+        time.sleep(2)
+        runtime.exit_to_launcher()
 
 
 _MAX_WBITS = const(15)
@@ -165,7 +196,11 @@ def fetch_app(app_name, mpy_matches):
 
     compiled_path = "compiled" if mpy_matches else "raw"
 
-    response = try_request_file(f"{compiled_path}/{app_name}.zip")
+    try:
+        response = try_request_file(f"{compiled_path}/{app_name}.zip")
+    except HTTPError:
+        TERM.print(I18N["Failed to get app."] + " (404)")
+        return
 
     TERM.print(I18N["Downloading zip..."])
 

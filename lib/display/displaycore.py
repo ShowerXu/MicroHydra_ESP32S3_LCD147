@@ -185,10 +185,10 @@ class DisplayCore:
 
         Args:
             x (int): x coordinate
-            Y (int): y coordinate
+            y (int): y coordinate
             color (int): 565 encoded color
         """
-        self._set_show_y(y, y)
+        self._set_show_y(y, y + 1)
         color = self._format_color(color)
         self.fbuf.pixel(x,y,color)
 
@@ -233,8 +233,8 @@ class DisplayCore:
             color (int): 565 encoded color
         """
         self._set_show_y(
-            min(y0,y1),
-            max(y0,y1),
+            min(y0, y1),
+            max(y0, y1) + 1,
         )
         color = self._format_color(color)
         self.fbuf.line(x0, y0, x1, y1, color)
