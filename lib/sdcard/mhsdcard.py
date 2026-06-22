@@ -61,11 +61,15 @@ class SDCard:
 
     def mount(self):
         """Mount the SDCard."""
-        if "sd" in os.listdir("/"):
-            return
         try:
             os.mount(self.sd, '/sd')
-        except (OSError, NameError, AttributeError) as e:
+        except OSError as e:
+            # errno 16 is EBUSY (already mounted), 17 is EEXIST
+            if e.errno in (16, 17):
+                pass
+            else:
+                print(f"Could not mount SDCard: {e}")
+        except (NameError, AttributeError) as e:
             print(f"Could not mount SDCard: {e}")
 
 

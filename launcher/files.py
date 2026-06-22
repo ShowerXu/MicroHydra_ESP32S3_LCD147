@@ -577,6 +577,11 @@ def main_loop(tft, kb, config, overlay):
 
     new_keys = kb.get_new_keys()
     sd.mount()
+    time.sleep_ms(150)
+    try:
+        os.sync()
+    except:
+        pass
     file_list, dir_dict = parse_files()
 
     view = ListView(tft, config, file_list, dir_dict)
